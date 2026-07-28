@@ -1,84 +1,78 @@
 # LightTip
 
-A tip calculator and receipt splitter for the **Light Phone III**, built on the official
-LightOS SDK. In the toolbox it shows up as **Tip Calculator**.
+Tip calculator and receipt splitter for the **Light Phone III**. Shows up on the phone as
+**Tip Calculator**.
 
-Two tabs, switched from the bottom bar:
+Two tabs, switched from the bar at the bottom:
 
-- **Tip** — punch in the bill on a POS-style keypad, pick 10 / 15 / 18 / 20 / 22% or type
-  your own, and read the tip and total straight off the screen.
+- **Tip** — punch the bill into a POS-style keypad, pick 10 / 15 / 18 / 20 / 22% or type
+  your own, read the tip and total off the screen. Works offline.
 - **Split** — photograph the receipt. Claude Haiku reads the line items off the paper, you
-  tap each item and tick off who's on it, and LightTip works out what everyone owes with
-  tax and tip shared in proportion to what they actually ordered.
+  tap each item and tick who's on it, and LightTip works out what everyone owes with tax
+  and tip shared in proportion to what they actually ordered.
 
-Vision runs on **your own Anthropic API key**, stored locally on the phone. Nothing else
-leaves the device.
+Vision runs on **your own Anthropic API key**, stored on the phone. Nothing else leaves the
+device.
 
 ## Install
 
-Every push to `main` publishes a GitHub Release with the APK attached — grab the latest
-from [Releases](../../releases/latest).
+Every push to `main` publishes a signed APK as a GitHub Release. Grab the newest from
+[Releases](../../releases/latest):
 
 ```
-adb install -r LightTip-<version>.apk
+adb install -r LightTip-v<version>.apk
 ```
 
-Or upload the APK in the Light dashboard under **Developer Mode**. A self-built tool
-triggers the "dangerous sideload" warning; accept it.
+The keystore is committed, so every build is signed with the same key and upgrades install
+over the top instead of erroring.
 
 ## First run
 
-1. Generate a QR for your Anthropic key with the companion page at
-   `https://gi-os.github.io/LightTip/` (it runs entirely in your browser — the key is
-   never sent anywhere).
-2. On the phone: **Tip Calculator → gear → Scan API key (QR)**. Typing it by hand works too.
+1. Open `https://gi-os.github.io/LightTip/`, paste your Anthropic key, and a QR appears.
+   The page is entirely client-side — the key is never sent anywhere.
+2. On the phone: **gear → Scan QR**. Pasting the key by hand works too.
 
-Only the Split tab needs a key. The Tip tab is pure arithmetic and works offline.
+Only the Split tab needs a key.
 
 ## Splitting a bill
 
 1. **SPLIT** tab → **+** → photograph the bill.
-2. Wait for Haiku to read the items (a second or two, roughly a fraction of a cent).
-3. **PEOPLE** → add everyone at the table.
-4. Tap an item, tick everyone sharing it. Shared items divide evenly among the people ticked.
+2. Wait a second or two while Haiku reads it.
+3. Person icon → add everyone at the table. Names are remembered between bills, so the
+   regular crowd is one tap next time.
+4. Tap an item, tick everyone sharing it. A shared item divides evenly among whoever is ticked.
 5. **TOTALS** → per-person breakdown of items, tax and tip.
 
-Tip defaults to 20% and is taken on the pre-tax subtotal, adjustable from the bottom bar.
-Items nobody claims are left out of everyone's share and reported separately at the bottom
-of Totals, so a forgotten line can't quietly vanish.
+Tip defaults to 20% on the pre-tax subtotal and is adjustable per receipt. Items nobody
+claims stay out of everyone's share and get reported separately at the bottom of Totals, so
+a forgotten line can't quietly vanish.
 
-Every number is held in cents and the tax and tip splits use largest-remainder allocation,
-so the per-person totals always add back up to the bill exactly — no stray pennies.
+Every figure is held in cents, and tax and tip are allocated by largest remainder, so the
+per-person totals always add back up to the bill exactly — no stray pennies.
 
-## Design notes for the LPIII panel
+## Notes for the LPIII panel
 
-- The screen renders **greyscale on a matte panel**. Selected tip chips invert rather than
-  tint, because hue is discarded and a low-alpha fill disappears.
-- Surfaces are true black with no tonal elevation, so 1dp hairlines do the work of
-  separating regions.
-- The display is roughly **411 x 472 dp** — normal width, about half the usual height.
-  The keypad takes its height from the leftover space rather than a fixed fraction.
+- The screen is **greyscale on matte glass**. Selected tip chips invert rather than tint,
+  because hue is discarded and a low-alpha fill disappears.
+- Surfaces are true black with no tonal elevation, so 1dp rules separate regions and the
+  dialogs get an explicit dark-grey fill — a scrim over black tints nothing.
+- The display is roughly **411 × 472 dp**, normal width and about half the usual height.
+  The keypad takes the leftover vertical space rather than a fixed fraction of the screen.
+- Text uses Akkurat when LightOS provides it, so the app matches the system UI.
 
-## Building it yourself
+## Why this isn't a LightOS SDK tool
 
-The Light SDK is vendored in `sdk/`. The only external credential is a GitHub token with
-`read:packages`, used to pull Light's `light-keyboard` package. Set repo secrets
-`GH_PACKAGES_USER` and `GH_PACKAGES_TOKEN`, or `gpr.user` / `gpr.key` in `local.properties`
-for local builds.
+The [Light SDK](https://github.com/lightphone/light-sdk) sandbox rejects CameraX and blocks
+`LocalContext` outright, and `READ_MEDIA_IMAGES` is not on its permission allowlist — so a
+sanctioned SDK tool cannot photograph anything. LightTip is a plain sideloaded APK for the
+same reason [LightPass](https://github.com/gi-os/LightPass) is.
+
+## Building
 
 ```
-./gradlew :tool:assembleDebug
+./gradlew :app:assembleDebug
 ```
-
-The SDK's permission allowlist is enforced at configure time, which is why capture is
-camera-only — `READ_MEDIA_IMAGES` is not on the list, so there is no album picker.
-
-Tool identity lives in `tool/lighttool.toml` — id `com.lighttip.calc`, label
-`Tip Calculator`. CI overwrites `versionCode` with the workflow run number so
-`adb install -r` upgrades in place.
 
 ## Related
 
-Sibling tools: [LightPass](https://github.com/gi-os/LightPass) (the ticket-stub reader this
-borrows its capture and QR-key flow from), [LightFastread](https://github.com/gi-os/LightFastread),
-[LightNYCSubway](https://github.com/gi-os/LightNYCSubway).
+[LightPass](https://github.com/gi-os/LightPass) · [LightFastread](https://github.com/gi-os/LightFastread) · [LightNYCSubway](https://github.com/gi-os/LightNYCSubway)
