@@ -62,7 +62,7 @@ class SplitListScreen(
                     center = LightTopBarCenter.Text("Split a bill"),
                     rightButton = LightBarButton.LightIcon(
                         icon = LightIcons.ADD,
-                        onClick = { navigateTo({ CaptureChooserScreen(it, repository) }) },
+                        onClick = { navigateTo({ CameraCaptureScreen(it, repository) }) },
                         contentDescription = "Add receipt",
                     ),
                 )

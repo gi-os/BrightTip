@@ -1,7 +1,5 @@
 package com.lighttip.calc
 
-import android.content.Context
-import android.net.Uri
 import com.thelightphone.sdk.SealedLightContext
 import kotlinx.coroutines.flow.Flow
 import java.io.File
@@ -29,11 +27,6 @@ class TipRepository(
     suspend fun setApiKey(key: String) = dao.putMetadata(AppMetadataEntity(KEY_API, key.trim()))
 
     fun newCaptureFile(): File = File(receiptDir, "cap_${UUID.randomUUID()}.jpg")
-
-    suspend fun addReceiptFromUri(uri: Uri, context: Context): String {
-        val bytes = context.contentResolver.openInputStream(uri)!!.use { it.readBytes() }
-        return addReceipt(bytes)
-    }
 
     suspend fun addReceiptFromFile(file: File): String {
         val id = addReceipt(file.readBytes())

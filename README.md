@@ -37,7 +37,7 @@ Only the Split tab needs a key. The Tip tab is pure arithmetic and works offline
 
 ## Splitting a bill
 
-1. **SPLIT** tab → **+** → *Take a photo* or *Choose from album*.
+1. **SPLIT** tab → **+** → photograph the bill.
 2. Wait for Haiku to read the items (a second or two, roughly a fraction of a cent).
 3. **PEOPLE** → add everyone at the table.
 4. Tap an item, tick everyone sharing it. Shared items divide evenly among the people ticked.
@@ -69,6 +69,9 @@ for local builds.
 ```
 ./gradlew :tool:assembleDebug
 ```
+
+The SDK's permission allowlist is enforced at configure time, which is why capture is
+camera-only — `READ_MEDIA_IMAGES` is not on the list, so there is no album picker.
 
 Tool identity lives in `tool/lighttool.toml` — id `com.lighttip.calc`, label
 `Tip Calculator`. CI overwrites `versionCode` with the workflow run number so
