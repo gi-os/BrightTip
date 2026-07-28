@@ -14,10 +14,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.CheckBox
-import androidx.compose.material.icons.filled.CheckBoxOutlineBlank
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.PersonAdd
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -77,7 +75,7 @@ fun ReceiptScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = onPeople) { Icon(Icons.Default.PersonAdd, "People") }
+                    IconButton(onClick = onPeople) { Icon(Icons.Default.Person, "People") }
                     IconButton(onClick = { vm.rescan(receiptId) }) {
                         Icon(Icons.Default.Refresh, "Read again")
                     }
@@ -239,14 +237,14 @@ private fun AssignDialog(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        Icon(
-                            if (checked) {
-                                Icons.Default.CheckBox
-                            } else {
-                                Icons.Default.CheckBoxOutlineBlank
-                            },
-                            contentDescription = null,
-                            tint = Color.White,
+                        androidx.compose.material3.Checkbox(
+                            checked = checked,
+                            onCheckedChange = { onToggle(person.id, it) },
+                            colors = androidx.compose.material3.CheckboxDefaults.colors(
+                                checkedColor = Color.White,
+                                uncheckedColor = Color.White,
+                                checkmarkColor = Color.Black,
+                            ),
                         )
                         Text(
                             person.name,
