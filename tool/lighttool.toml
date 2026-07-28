@@ -1,0 +1,11 @@
+[tool]
+id = "com.lighttip.calc"
+label = "Tip Calculator"
+versionCode = 1
+versionName = "1.0.0"
+permissions = [
+    "android.permission.INTERNET",
+    "android.permission.CAMERA",
+    "android.permission.READ_MEDIA_IMAGES",
+]
+serverPackage = "com.lightos"

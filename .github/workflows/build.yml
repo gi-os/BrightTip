@@ -1,0 +1,79 @@
+name: Build LightTip APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Assemble and release APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK Platform 36
+        run: sdkmanager "platforms;android-36"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      # versionCode is the workflow run number so `adb install -r` always upgrades
+      # in place, and versionName stays valid semver for the SDK's validator.
+      - name: Stamp version
+        id: version
+        run: |
+          RUN=${{ github.run_number }}
+          BASE=$(grep -oP 'versionName\s*=\s*"\K[0-9]+\.[0-9]+' tool/lighttool.toml)
+          VERSION="${BASE}.${RUN}"
+          sed -i "s/^versionCode = .*/versionCode = ${RUN}/" tool/lighttool.toml
+          sed -i "s/^versionName = .*/versionName = \"${VERSION}\"/" tool/lighttool.toml
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "run=${RUN}" >> "$GITHUB_OUTPUT"
+          cat tool/lighttool.toml
+
+      - name: Assemble
+        env:
+          GH_PACKAGES_USER: ${{ secrets.GH_PACKAGES_USER }}
+          GH_PACKAGES_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
+        run: ./gradlew :tool:lintDebug :tool:assembleDebug --stacktrace
+
+      - name: Name the APK
+        run: |
+          mkdir -p dist
+          cp tool/build/outputs/apk/debug/tool-debug.apk \
+             "dist/LightTip-${{ steps.version.outputs.version }}.apk"
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighttip-debug-apk
+          path: dist/*.apk
+          if-no-files-found: error
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "build-${{ steps.version.outputs.run }}" \
+            "dist/LightTip-${{ steps.version.outputs.version }}.apk" \
+            --title "LightTip ${{ steps.version.outputs.version }}" \
+            --notes "Automatic build from ${{ github.sha }}.
+
+          Install with \`adb install -r LightTip-${{ steps.version.outputs.version }}.apk\`, or upload the APK in the Light dashboard under Developer Mode. The tool appears in the toolbox as **Tip Calculator**." \
+            --latest
