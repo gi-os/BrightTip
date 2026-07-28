@@ -101,6 +101,11 @@ same reason [LightPass](https://github.com/gi-os/LightPass) is.
 ./gradlew :app:assembleDebug
 ```
 
+The launcher icon is generated, not hand-drawn — geometry lives in
+`scripts/generate_icon.py` and is emitted as both adaptive vector layers and raster
+fallbacks. Edit it there and re-run `python3 scripts/generate_icon.py`; the script
+asserts the mark stays inside the adaptive safe zone.
+
 ## The gi-os Light App collection
 
 Ten tools for the Light Phone III, all open source, all built in one run.
