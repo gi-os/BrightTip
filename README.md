@@ -14,6 +14,27 @@ Two tabs, switched from the bar at the bottom:
 Vision runs on **your own Anthropic API key**, stored on the phone. Nothing else leaves the
 device.
 
+## Screenshots
+
+<table>
+  <tr>
+    <td align="center">
+      <img src="docs/screenshots/tip.png" width="250" alt="LightTip tip calculator with a POS-style keypad"><br>
+      <sub>Tip: keypad, presets, tip and total</sub>
+    </td>
+    <td align="center">
+      <img src="docs/screenshots/split-items.png" width="250" alt="Receipt line items with initials against each"><br>
+      <sub>Split: line items read off the receipt, initials for who is on each</sub>
+    </td>
+    <td align="center">
+      <img src="docs/screenshots/totals.png" width="250" alt="Per-person totals with tax and tip shared in proportion"><br>
+      <sub>Totals: tax and tip shared in proportion</sub>
+    </td>
+  </tr>
+</table>
+
+Taken on a Light Phone III.
+
 ## Install
 
 Every push to `main` publishes a signed APK as a GitHub Release. Grab the newest from
@@ -73,6 +94,21 @@ same reason [LightPass](https://github.com/gi-os/LightPass) is.
 ./gradlew :app:assembleDebug
 ```
 
-## Related
+## The gi-os Light App collection
 
-[LightPass](https://github.com/gi-os/LightPass) · [LightFastread](https://github.com/gi-os/LightFastread) · [LightNYCSubway](https://github.com/gi-os/LightNYCSubway)
+Ten tools for the Light Phone III, all open source, all built in one run.
+
+| Tool | What it does | Built on |
+| --- | --- | --- |
+| [LightPass](https://github.com/gi-os/LightPass) | Photograph a movie ticket, keep the stub | Plain Android |
+| [LightQR](https://github.com/gi-os/LightQR) | QR scanner, plus a browser generator | Plain Android |
+| [LightRSS](https://github.com/gi-os/LightRSS) | RSS and Atom reader with images and QR subscribe | light-sdk, fork of [zachattack323/LightRSS](https://github.com/zachattack323/LightRSS) |
+| [LightNYCSubway](https://github.com/gi-os/LightNYCSubway) | Live MTA subway arrivals | light-sdk fork |
+| [chat](https://github.com/gi-os/chat) | iMessage over a self-hosted BlueBubbles server | Fork of [craigeley/chat](https://github.com/craigeley/chat) |
+| [LightFog](https://github.com/gi-os/LightFog) | Fog of World companion, GPS recorder and fog map | Fork of [garado/light-topographic](https://github.com/garado/light-topographic) |
+| [LightNonogram](https://github.com/gi-os/LightNonogram) | Picross, plus a generator that only ships solvable puzzles | Kotlin generator, light-sdk tool |
+| [LightSolitaire](https://github.com/gi-os/LightSolitaire) | Klondike, draw one, unlimited redeals | light-sdk |
+| [LightFastread](https://github.com/gi-os/LightFastread) | RSVP speed reader for EPUB and MOBI | Fork of [fluffyspace/FastRead](https://github.com/fluffyspace/FastRead) |
+| **LightTip** (this repo) | Tip calculator, plus a receipt splitter that reads the line items | Plain Android |
+
+The Light Phone does not sponsor or endorse any of these.
