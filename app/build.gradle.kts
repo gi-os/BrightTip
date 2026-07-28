@@ -35,6 +35,8 @@ android {
         release {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            // Same committed key as debug, so either APK upgrades over the other.
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
     compileOptions {
