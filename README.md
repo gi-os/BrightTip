@@ -37,15 +37,22 @@ Taken on a Light Phone III.
 
 ## Install
 
-Every push to `main` publishes a signed APK as a GitHub Release. Grab the newest from
+Every push to `main` publishes one signed APK as a GitHub Release. Grab the newest from
 [Releases](../../releases/latest):
 
 ```
 adb install -r LightTip-v<version>.apk
 ```
 
-The keystore is committed, so every build is signed with the same key and upgrades install
-over the top instead of erroring.
+Or track `https://github.com/gi-os/LightTip` in **Obtainium** — that's the repo URL, not the
+GitHub Pages URL below.
+
+The keystore is committed at `keystore/lighttip.jks`, so every build carries the same
+certificate and upgrades install over the top. CI pins that certificate's SHA-256 in
+`signing-fingerprint.txt` and fails the build if it ever drifts, because a changed cert
+surfaces in Obtainium only as an opaque `Failure: Invalid`. Exactly one APK is attached per
+release so there is nothing for an updater to pick wrongly; the debug build stays a
+workflow artifact.
 
 ## First run
 

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  A percent sign: the tip on one tab, and on the other, two parties with a line
+  drawn between them. Line art in white to sit beside LightFastread's icon, and
+  heavy enough to survive a greyscale matte panel at launcher size.
+  Everything stays inside the 18..90 adaptive safe zone.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:pathData="M 31.5,41 A 9.5,9.5 0 1 0 50.5,41 A 9.5,9.5 0 1 0 31.5,41 Z"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="5"
+        android:fillColor="#00000000"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <path
+        android:pathData="M 57.5,67 A 9.5,9.5 0 1 0 76.5,67 A 9.5,9.5 0 1 0 57.5,67 Z"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="5"
+        android:fillColor="#00000000"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <path
+        android:pathData="M 73,32 L 35,76"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>
