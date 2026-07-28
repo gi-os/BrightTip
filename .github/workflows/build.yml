@@ -56,10 +56,17 @@ jobs:
           echo "actual   $ACTUAL"
           [ "$ACTUAL" = "$EXPECTED" ] || { echo '::error::signing certificate drifted'; exit 1; }
 
+      # AGP shortens resource paths in release builds, so ic_launcher.png is renamed
+      # to something like res/AB.png inside the zip. Ask the package what its icon is
+      # instead of grepping filenames — this is the same lookup Obtainium and the
+      # launcher do through PackageManager.
       - name: Verify launcher icon is present
         run: |
-          unzip -l out/*.apk | grep -Ei 'ic_launcher' | head -20
-          unzip -l out/*.apk | grep -qEi 'ic_launcher' || { echo '::error::no launcher icon in APK'; exit 1; }
+          AAPT2=$(find "$ANDROID_HOME/build-tools" -name aapt2 | sort -V | tail -1)
+          "$AAPT2" dump badging out/*.apk > badging.txt
+          grep -E "^(application:|application-icon-)" badging.txt
+          grep -qE "^application:.*icon='[^']+'" badging.txt \
+            || { echo '::error::package declares no launcher icon'; exit 1; }
 
       - name: Upload release APK artifact
         uses: actions/upload-artifact@v4
