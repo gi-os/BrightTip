@@ -78,6 +78,26 @@ a forgotten line can't quietly vanish.
 Every figure is held in cents, and tax and tip are allocated by largest remainder, so the
 per-person totals always add back up to the bill exactly — no stray pennies.
 
+## The wheel
+
+Turning the phone's wheel scrolls the receipt list, the line items, the people list, the
+per-person totals and the tick-list in the assign dialog. That last one is the reason it's
+here at all: on a 472dp-tall panel a table of six shows about four, and reaching over the
+list to drag it is the one gesture a bill-splitting app should never need mid-conversation.
+
+The wheel arrives as ordinary key events — LightOS relabels an optical sensor's scancodes as
+`WHEEL_CCW` / `WHEEL_CW` — and the Activity claims them in `dispatchKeyEvent`, before the
+view hierarchy gets a look, so a focused name field can't swallow them. Notches come faster
+than a frame, so each one is a debt that a share of gets paid off per frame; the first notch
+after a pause is held back, because the wheel sits under a thumb. The assign dialog is its
+own window, so it picks the wheel up separately and the list underneath stands down while
+it's open.
+
+The wheel *click* and the camera button are left alone — those belong to
+[LightControl](https://github.com/gi-os/LightControl), which owns them phone-wide and passes
+bare turns through so apps can scroll per notch. Deep version in
+[LightNews](https://github.com/gi-os/LightNews#the-wheel-and-the-camera-button).
+
 ## Notes for the LPIII panel
 
 - The screen is **greyscale on matte glass**. Selected tip chips invert rather than tint,

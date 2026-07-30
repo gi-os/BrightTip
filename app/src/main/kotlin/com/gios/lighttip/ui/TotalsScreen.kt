@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -26,6 +27,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.gios.lighttip.hw.WheelScroll
 import com.gios.lighttip.ui.theme.Dim
 import com.gios.lighttip.util.PersonShare
 import com.gios.lighttip.util.asMoney
@@ -37,6 +39,8 @@ fun TotalsScreen(vm: TipViewModel, receiptId: String, onBack: () -> Unit) {
     val state by flow.collectAsStateWithLifecycle()
     val split = state.split
     val tipPercent = state.receipt?.tipPercent ?: DEFAULT_TIP_PERCENT
+    val listState = rememberLazyListState()
+    WheelScroll(listState)
 
     Scaffold(
         containerColor = Color.Black,
@@ -53,7 +57,7 @@ fun TotalsScreen(vm: TipViewModel, receiptId: String, onBack: () -> Unit) {
         },
     ) { pad ->
         Column(Modifier.padding(pad).fillMaxSize().background(Color.Black)) {
-            LazyColumn(Modifier.weight(1f)) {
+            LazyColumn(Modifier.weight(1f), state = listState) {
                 items(split.shares, key = { it.person.id }) { share -> ShareRow(share) }
             }
             Rule()

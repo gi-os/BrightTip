@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Settings
@@ -38,6 +39,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gios.lighttip.data.ReceiptEntity
+import com.gios.lighttip.hw.WheelScroll
 import com.gios.lighttip.ui.theme.Dim
 import com.gios.lighttip.util.asMoney
 
@@ -212,7 +214,11 @@ private fun ColumnScope.SplitTab(
         )
         return
     }
-    LazyColumn(Modifier.fillMaxSize()) {
+    // Only one tab is composed at a time, so this needs no active flag: the tip
+    // tab has nothing to scroll and isn't there when the split tab is.
+    val listState = rememberLazyListState()
+    WheelScroll(listState)
+    LazyColumn(Modifier.fillMaxSize(), state = listState) {
         items(receipts, key = { it.id }) { receipt ->
             MenuRow(
                 label = receipt.merchant,

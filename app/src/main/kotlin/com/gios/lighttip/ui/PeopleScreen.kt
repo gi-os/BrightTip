@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
@@ -37,6 +38,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.gios.lighttip.hw.WheelScroll
 import com.gios.lighttip.ui.theme.Dim
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -47,6 +49,10 @@ fun PeopleScreen(vm: TipViewModel, receiptId: String, onBack: () -> Unit) {
     var draft by remember { mutableStateOf("") }
     // Names carry over between bills, so the regular crowd is one tap rather than typing.
     val suggestions = remember { vm.recentNames() }
+    // The name field is focused most of the time here, which is exactly why the
+    // activity intercepts the wheel before the view hierarchy sees it.
+    val listState = rememberLazyListState()
+    WheelScroll(listState)
 
     Scaffold(
         containerColor = Color.Black,
@@ -115,7 +121,7 @@ fun PeopleScreen(vm: TipViewModel, receiptId: String, onBack: () -> Unit) {
             if (state.people.isEmpty()) {
                 EmptyState("Nobody added yet.")
             } else {
-                LazyColumn(Modifier.fillMaxSize()) {
+                LazyColumn(Modifier.fillMaxSize(), state = listState) {
                     items(state.people, key = { it.id }) { person ->
                         Row(
                             Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),

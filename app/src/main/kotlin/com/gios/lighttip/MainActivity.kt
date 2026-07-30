@@ -1,15 +1,21 @@
 package com.gios.lighttip
 
 import android.os.Bundle
+import android.view.KeyEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.gios.lighttip.hw.LightKey
+import com.gios.lighttip.hw.LightKeys
+import com.gios.lighttip.hw.LocalWheelBus
+import com.gios.lighttip.hw.WheelBus
 import com.gios.lighttip.ui.CameraScreen
 import com.gios.lighttip.ui.HomeScreen
 import com.gios.lighttip.ui.PeopleScreen
@@ -22,6 +28,34 @@ import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanOptions
 
 class MainActivity : ComponentActivity() {
+
+    /** Wheel notches on their way to whichever screen is up. */
+    private val wheel = WheelBus()
+
+    /**
+     * Every hardware key arrives here first — `DecorView` calls the window callback
+     * before it walks the view hierarchy — which is what lets the wheel beat the
+     * focused amount field. Both halves of a notch are consumed: one notch is a
+     * complete DOWN+UP pair, and letting the UP through means a text field can read
+     * it as a keypress.
+     */
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        when (LightKeys.of(event)) {
+            LightKey.WheelUp -> {
+                if (event.action == KeyEvent.ACTION_DOWN) wheel.send(1)
+                return true
+            }
+
+            LightKey.WheelDown -> {
+                if (event.action == KeyEvent.ACTION_DOWN) wheel.send(-1)
+                return true
+            }
+
+            else -> Unit
+        }
+        return super.dispatchKeyEvent(event)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -40,68 +74,71 @@ class MainActivity : ComponentActivity() {
                     vm.setApiKey(key)
                 }
 
-                NavHost(nav, startDestination = "home") {
-                    composable("home") {
-                        HomeScreen(
-                            vm = vm,
-                            onCapture = { nav.navigate("camera") },
-                            onOpenReceipt = { id -> nav.navigate("receipt/$id") },
-                            onSettings = { nav.navigate("settings") },
-                        )
-                    }
-                    composable("camera") {
-                        CameraScreen(
-                            newFile = { vm.newCaptureFile() },
-                            onCaptured = { file ->
-                                vm.addFromFile(file)
-                                nav.popBackStack("home", false)
-                            },
-                        )
-                    }
-                    composable(
-                        "receipt/{id}",
-                        arguments = listOf(navArgument("id") { type = NavType.StringType }),
-                    ) { entry ->
-                        val id = entry.arguments!!.getString("id")!!
-                        ReceiptScreen(
-                            vm = vm,
-                            receiptId = id,
-                            onPeople = { nav.navigate("people/$id") },
-                            onTotals = { nav.navigate("totals/$id") },
-                            onBack = { nav.popBackStack() },
-                        )
-                    }
-                    composable(
-                        "people/{id}",
-                        arguments = listOf(navArgument("id") { type = NavType.StringType }),
-                    ) { entry ->
-                        PeopleScreen(
-                            vm = vm,
-                            receiptId = entry.arguments!!.getString("id")!!,
-                            onBack = { nav.popBackStack() },
-                        )
-                    }
-                    composable(
-                        "totals/{id}",
-                        arguments = listOf(navArgument("id") { type = NavType.StringType }),
-                    ) { entry ->
-                        TotalsScreen(
-                            vm = vm,
-                            receiptId = entry.arguments!!.getString("id")!!,
-                            onBack = { nav.popBackStack() },
-                        )
-                    }
-                    composable("settings") {
-                        SettingsScreen(
-                            vm = vm,
-                            onScanQr = {
-                                scanQr.launch(
-                                    ScanOptions().setBeepEnabled(false)
-                                        .setPrompt("Scan Anthropic API key QR"),
-                                )
-                            },
-                            onBack = { nav.popBackStack() },
-                        )
+                // Every screen below can reach the wheel.
+                CompositionLocalProvider(LocalWheelBus provides wheel) {
+                    NavHost(nav, startDestination = "home") {
+                        composable("home") {
+                            HomeScreen(
+                                vm = vm,
+                                onCapture = { nav.navigate("camera") },
+                                onOpenReceipt = { id -> nav.navigate("receipt/$id") },
+                                onSettings = { nav.navigate("settings") },
+                            )
+                        }
+                        composable("camera") {
+                            CameraScreen(
+                                newFile = { vm.newCaptureFile() },
+                                onCaptured = { file ->
+                                    vm.addFromFile(file)
+                                    nav.popBackStack("home", false)
+                                },
+                            )
+                        }
+                        composable(
+                            "receipt/{id}",
+                            arguments = listOf(navArgument("id") { type = NavType.StringType }),
+                        ) { entry ->
+                            val id = entry.arguments!!.getString("id")!!
+                            ReceiptScreen(
+                                vm = vm,
+                                receiptId = id,
+                                onPeople = { nav.navigate("people/$id") },
+                                onTotals = { nav.navigate("totals/$id") },
+                                onBack = { nav.popBackStack() },
+                            )
+                        }
+                        composable(
+                            "people/{id}",
+                            arguments = listOf(navArgument("id") { type = NavType.StringType }),
+                        ) { entry ->
+                            PeopleScreen(
+                                vm = vm,
+                                receiptId = entry.arguments!!.getString("id")!!,
+                                onBack = { nav.popBackStack() },
+                            )
+                        }
+                        composable(
+                            "totals/{id}",
+                            arguments = listOf(navArgument("id") { type = NavType.StringType }),
+                        ) { entry ->
+                            TotalsScreen(
+                                vm = vm,
+                                receiptId = entry.arguments!!.getString("id")!!,
+                                onBack = { nav.popBackStack() },
+                            )
+                        }
+                        composable("settings") {
+                            SettingsScreen(
+                                vm = vm,
+                                onScanQr = {
+                                    scanQr.launch(
+                                        ScanOptions().setBeepEnabled(false)
+                                            .setPrompt("Scan Anthropic API key QR"),
+                                    )
+                                },
+                                onBack = { nav.popBackStack() },
+                            )
+                        }
                     }
                 }
             }

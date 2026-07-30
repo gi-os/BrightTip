@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
@@ -38,6 +39,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gios.lighttip.data.ItemEntity
 import com.gios.lighttip.data.PersonEntity
 import com.gios.lighttip.data.ReceiptEntity
+import com.gios.lighttip.hw.WheelInDialog
+import com.gios.lighttip.hw.WheelScroll
 import com.gios.lighttip.ui.theme.Dim
 import com.gios.lighttip.util.asMoney
 import com.gios.lighttip.util.initialsOf
@@ -56,6 +59,11 @@ fun ReceiptScreen(
     val receipt = state.receipt
     var assigning by remember { mutableStateOf<ItemEntity?>(null) }
     var tipOpen by remember { mutableStateOf(false) }
+
+    // The assign dialog stays composed over this list and feeds the same bus, so
+    // the items have to stand down while it is up or one notch scrolls both.
+    val listState = rememberLazyListState()
+    WheelScroll(listState, active = assigning == null)
 
     Scaffold(
         containerColor = Color.Black,
@@ -127,7 +135,7 @@ fun ReceiptScreen(
                     EmptyState("Couldn't read that photo.\nTap refresh to try again.")
                 state.people.isEmpty() ->
                     EmptyState("Add the people at the table first.\nTap the person icon above.")
-                else -> LazyColumn(Modifier.fillMaxSize()) {
+                else -> LazyColumn(Modifier.fillMaxSize(), state = listState) {
                     items(state.items, key = { it.id }) { item ->
                         ItemRow(item, state.peopleOn(item.id)) { assigning = item }
                     }
@@ -206,6 +214,10 @@ private fun AssignDialog(
     onDismiss: () -> Unit,
 ) {
     val heads = assignedIds.size
+    // A dialog is a window of its own, so it has to pick the wheel up itself.
+    WheelInDialog()
+    val listState = rememberLazyListState()
+    WheelScroll(listState)
     androidx.compose.material3.AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = Color(0xFF141414),
@@ -226,7 +238,7 @@ private fun AssignDialog(
             }
         },
         text = {
-            LazyColumn {
+            LazyColumn(state = listState) {
                 items(people, key = { it.id }) { person ->
                     val checked = person.id in assignedIds
                     Row(
