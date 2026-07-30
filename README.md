@@ -85,17 +85,46 @@ per-person totals and the tick-list in the assign dialog. That last one is the r
 here at all: on a 472dp-tall panel a table of six shows about four, and reaching over the
 list to drag it is the one gesture a bill-splitting app should never need mid-conversation.
 
-The wheel arrives as ordinary key events — LightOS relabels an optical sensor's scancodes as
-`WHEEL_CCW` / `WHEEL_CW` — and the Activity claims them in `dispatchKeyEvent`, before the
-view hierarchy gets a look, so a focused name field can't swallow them. Notches come faster
-than a frame, so each one is a debt that a share of gets paid off per frame; the first notch
+LightTip on its own is the whole install for that. The wheel arrives as ordinary key events —
+LightOS relabels an optical sensor's scancodes as `WHEEL_CCW` / `WHEEL_CW`, and nothing in the
+system intercepts them, so they land in whichever app has focus — which leaves no service to
+enable, no permission to grant and no root. The Activity claims them in `dispatchKeyEvent`,
+before the view hierarchy gets a look, so a focused name field can't swallow them. Notches
+come faster than a frame, so each one is a debt that a share of gets paid off per frame; the
+first notch
 after a pause is held back, because the wheel sits under a thumb. The assign dialog is its
 own window, so it picks the wheel up separately and the list underneath stands down while
 it's open.
 
-The wheel *click* and the camera button are left alone — those belong to
-[LightControl](https://github.com/gi-os/LightControl), which owns them phone-wide and passes
-bare turns through so apps can scroll per notch. Deep version in
+The wheel *click* and the camera button are left alone, and do nothing here. If you want
+them, [LightControl](https://github.com/gi-os/LightControl) is a separate and optional install
+that adds them phone-wide: hold the wheel in and turn for brightness, tap it for the
+flashlight, the camera button for the camera, each rebindable — tap and hold separately — to
+any app you have installed. Apps with no wheel code of their own get brightness or a
+synthetic-swipe scroll out of a bare turn.
+
+It won't cost you the scrolling above. LightControl is a phone-wide key filter and passes bare
+turns straight through to `com.gios.*`, plus LightFastread, LightRSS and LightPhono, because
+scrolling a tick-list one notch at a time is only possible from inside the app.
+
+```bash
+# Optional: LightControl, for brightness, the flashlight and the camera button
+adb install -r LightControl-v1.0.x.apk
+
+# The key service. NOTE: this setting is a list, and this command REPLACES it —
+# if you also run LightVoice's push-to-talk, colon-join both components instead.
+adb shell settings put secure enabled_accessibility_services \
+  com.gios.lightcontrol/com.gios.lightcontrol.keys.ControlService
+adb shell settings put secure accessibility_enabled 1
+
+# Brightness, and the level readout + opening apps from the service
+adb shell appops set com.gios.lightcontrol WRITE_SETTINGS allow
+adb shell appops set com.gios.lightcontrol SYSTEM_ALERT_WINDOW allow
+```
+
+Latest APK: https://github.com/gi-os/LightControl/releases/latest
+
+The deep version of the keycodes and the timing is in
 [LightNews](https://github.com/gi-os/LightNews#the-wheel-and-the-camera-button).
 
 ## Notes for the LPIII panel
