@@ -11,6 +11,10 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: read
+  packages: read
+
 concurrency:
   group: check-${{ github.ref }}
   cancel-in-progress: true
@@ -29,9 +33,27 @@ jobs:
 
       - name: Unit tests
         run: ./gradlew :app:testDebugUnitTest --stacktrace
+        env:
+          # GitHub Packages has no anonymous read, so resolving light-common needs a token.
+          # GITHUB_ACTOR is on the runner already; GITHUB_TOKEN is not exported to steps and
+          # has to be handed in. GPR_TOKEN takes precedence if a cross-repo PAT is ever needed:
+          # a repo-scoped GITHUB_TOKEN's read access to another repository's package is not
+          # guaranteed under a personal account.
+          GPR_USER: ${{ secrets.GPR_USER }}
+          GPR_TOKEN: ${{ secrets.GPR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Compile
         run: ./gradlew :app:assembleDebug --stacktrace
+        env:
+          # GitHub Packages has no anonymous read, so resolving light-common needs a token.
+          # GITHUB_ACTOR is on the runner already; GITHUB_TOKEN is not exported to steps and
+          # has to be handed in. GPR_TOKEN takes precedence if a cross-repo PAT is ever needed:
+          # a repo-scoped GITHUB_TOKEN's read access to another repository's package is not
+          # guaranteed under a personal account.
+          GPR_USER: ${{ secrets.GPR_USER }}
+          GPR_TOKEN: ${{ secrets.GPR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload APK
         uses: actions/upload-artifact@v4

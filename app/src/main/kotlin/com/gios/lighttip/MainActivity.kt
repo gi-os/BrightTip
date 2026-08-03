@@ -12,6 +12,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.gios.light.common.report.LightReport
+import com.gios.light.common.report.ReportOverlay
 import com.gios.lighttip.hw.LightKey
 import com.gios.lighttip.hw.LightKeys
 import com.gios.lighttip.hw.LocalWheelBus
@@ -26,8 +28,6 @@ import com.gios.lighttip.ui.TotalsScreen
 import com.gios.lighttip.ui.theme.LightTipTheme
 import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanOptions
-import com.gios.lighttip.report.CrashLog
-import com.gios.lighttip.report.ReportOverlay
 
 class MainActivity : ComponentActivity() {
 
@@ -62,7 +62,12 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         // First thing, before anything else can throw: the handler chains onto whatever is
         // already installed and only writes a file, so it is safe this early.
-        CrashLog.install(this)
+        LightReport.install(
+            context = this,
+            appName = "LightTip",
+            label = "tip",
+            token = BuildConfig.REPORT_TOKEN,
+        )
         setContent {
             LightTipTheme {
                 val nav = rememberNavController()
