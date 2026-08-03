@@ -1,8 +1,25 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
     id("com.google.devtools.ksp")
+}
+
+/**
+ * The key shake-to-report posts issues with. Never in the repository: `local.properties` is
+ * ignored by git, and CI hands it in from a repository secret. An empty string is a working
+ * build — reports queue on the phone and go out from a later one that has the key.
+ */
+val reportToken: String = run {
+    val local = rootProject.file("local.properties")
+    val fromFile = if (local.exists()) {
+        Properties().apply { local.inputStream().use { load(it) } }.getProperty("reportToken")
+    } else {
+        null
+    }
+    fromFile ?: System.getenv("REPORT_TOKEN") ?: ""
 }
 
 android {
@@ -16,7 +33,10 @@ android {
         targetSdk = 35
         // CI overwrites both from the workflow run number; see .github/workflows/build.yml
         versionCode = 1
-        versionName = "1.0.0"
+        versionName = "1.1.0"
+
+        buildConfigField("String", "REPORT_TOKEN", "\"$reportToken\"")
+        buildConfigField("String", "REPORT_REPO", "\"gi-os/light-reports\"")
 
         // The LPIII is arm64 only; shipping four ABIs tripled the APK for nothing.
         ndk { abiFilters += "arm64-v8a" }
@@ -33,7 +53,11 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            // R8 on. The app pulls Room, CameraX, zxing and OkHttp for a tip calculator, and
+            // shipped all of it unshrunk. Keep rules live in proguard-rules.pro — the file was
+            // a placeholder until this change, so this is the first build that reads it.
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             // Same committed key as debug, so either APK upgrades over the other.
             signingConfig = signingConfigs.getByName("debug")
@@ -44,7 +68,11 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions { jvmTarget = "17" }
-    buildFeatures { compose = true }
+    // buildConfig carries REPORT_TOKEN into the app; see the reportToken block above.
+    buildFeatures {
+        compose = true
+        buildConfig = true
+    }
 }
 
 dependencies {
@@ -81,4 +109,7 @@ dependencies {
     implementation("com.journeyapps:zxing-android-embedded:4.3.0")
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
+
+    // The shake gesture is plain arithmetic with no Android imports, so it runs here.
+    testImplementation("junit:junit:4.13.2")
 }
