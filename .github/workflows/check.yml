@@ -44,7 +44,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Compile
-        run: ./gradlew :app:assembleDebug --stacktrace
+        # Release too, not only debug. Debug is not minified, so a debug-only check cannot see
+        # an R8 problem — and R8 is the part of this app most likely to break, since keep rules
+        # fail at build time here and at runtime on the phone. The signing key is committed, so
+        # a release build needs no secret.
+        run: ./gradlew :app:assembleDebug :app:assembleRelease --stacktrace
         env:
           # GitHub Packages has no anonymous read, so resolving light-common needs a token.
           # GITHUB_ACTOR is on the runner already; GITHUB_TOKEN is not exported to steps and
