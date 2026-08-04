@@ -39,8 +39,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gios.lighttip.data.ItemEntity
 import com.gios.lighttip.data.PersonEntity
 import com.gios.lighttip.data.ReceiptEntity
-import com.gios.lighttip.hw.WheelInDialog
-import com.gios.lighttip.hw.WheelScroll
+import com.gios.light.common.hw.WheelInDialog
+import com.gios.light.common.hw.WheelScroll
 import com.gios.lighttip.ui.theme.Dim
 import com.gios.lighttip.util.asMoney
 import com.gios.lighttip.util.initialsOf
