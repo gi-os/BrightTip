@@ -39,7 +39,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gios.lighttip.data.ReceiptEntity
-import com.gios.lighttip.hw.WheelScroll
+import com.gios.light.common.hw.WheelScroll
 import com.gios.lighttip.ui.theme.Dim
 import com.gios.lighttip.util.asMoney
 

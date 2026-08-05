@@ -33,7 +33,7 @@ android {
         targetSdk = 35
         // CI overwrites both from the workflow run number; see .github/workflows/build.yml
         versionCode = 1
-        versionName = "1.2.0"
+        versionName = "1.3.0"
 
         buildConfigField("String", "REPORT_TOKEN", "\"$reportToken\"")
         buildConfigField("String", "REPORT_REPO", "\"gi-os/light-reports\"")
@@ -78,7 +78,7 @@ android {
 dependencies {
     // Shake-to-report, the wheel and the shared type/greys. Was a vendored copy of the same
     // code under com.gios.lighttip.report until this version.
-    implementation("com.gios:light-common:1.0.1")
+    implementation("com.gios:light-common:1.2.0")
 
     val composeBom = platform("androidx.compose:compose-bom:2024.12.01")
     implementation(composeBom)
@@ -113,6 +113,11 @@ dependencies {
     implementation("com.journeyapps:zxing-android-embedded:4.3.0")
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
+
+    // Installs the baseline profile that light-common ships in its AAR. Without this the
+    // profile is packaged and never used: below API 31 nothing reads it, and even above,
+    // installation is this library's job rather than the platform's.
+    implementation("androidx.profileinstaller:profileinstaller:1.4.1")
 
     // The shake gesture is plain arithmetic with no Android imports, so it runs here.
     testImplementation("junit:junit:4.13.2")

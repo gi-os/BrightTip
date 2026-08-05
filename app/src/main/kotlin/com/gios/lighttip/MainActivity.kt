@@ -14,10 +14,10 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.gios.light.common.report.LightReport
 import com.gios.light.common.report.ReportOverlay
-import com.gios.lighttip.hw.LightKey
-import com.gios.lighttip.hw.LightKeys
-import com.gios.lighttip.hw.LocalWheelBus
-import com.gios.lighttip.hw.WheelBus
+import com.gios.light.common.hw.LightKey
+import com.gios.light.common.hw.LightKeys
+import com.gios.light.common.hw.LocalWheelBus
+import com.gios.light.common.hw.WheelBus
 import com.gios.lighttip.ui.CameraScreen
 import com.gios.lighttip.ui.HomeScreen
 import com.gios.lighttip.ui.PeopleScreen

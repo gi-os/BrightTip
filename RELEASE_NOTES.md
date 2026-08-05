@@ -1,45 +1,49 @@
-## LightTip v1.2 — The shake asks instead of interrupting, and the plumbing moved out
+## LightTip v1.3 — The wheel comes from the library too, backups, and R8 in full mode
 
-**Two things: shaking the phone no longer throws a sheet over what you were doing, and the
-reporting code it belongs to is now a shared library rather than a copy that lives in this app.**
+**Three things: the last of the copy-pasted plumbing is gone, LightTip now backs itself up to
+BasilNet, and the release build shrinks properly.**
 
-### The shake offers a chip, not a sheet
+### The wheel is shared code now
 
-The first version got the shape of the question wrong. A shake is a gesture the phone can
-misread — and the cost of misreading it was paid every single time, because a full-screen sheet
-landed on top of whatever you were reading to ask about a problem that may not have existed. On a
-3.92" panel that is a bad trade against a report that might not be real.
+v1.2 moved reporting into `light-common` and left `hw/` behind, because the library did not have
+a wheel yet. It does, so this app's copy is deleted — 190 lines, two files, and one more place
+the wheel could have drifted from everywhere else.
 
-So the offer is small, it sits out of the way, and **silence is an answer**. A shake puts a
-"SEND ERROR?" chip in the bottom corner; ignore it for four seconds and it fades. Nothing is lost
-by ignoring it: an unsent crash log stays on disk and is offered again on the next launch, and a
-failure the app noticed itself will not ask again for an hour. Only the tap costs anything, and
-only the tap opens the sheet.
+Nothing about turning it changes. The library's `WheelScroll` is a superset of what was here:
+same `active` guard, plus `reverse` and a gate for whole subtrees that this app does not use yet.
 
-A crash offer stands for eight seconds rather than four. It is the one offer that cannot be
-reconstructed from nothing if you miss it.
+### Backups
 
-The chip is drawn in its own window rather than placed in the layout, so it lands in the same
-corner in every app regardless of how that app is built, and it cannot swallow a tap meant for
-what is underneath it.
+LightTip offers itself to LightSync, so every bill the receipt splitter has parsed is on BasilNet
+instead of only on the phone. Two stores, because the halves are worth different amounts:
 
-Issue titles now follow the same convention as every other app — `LightTip v1.2.x — <headline>`,
-labelled `tip` — instead of the `tip: <headline>` this app had invented.
+- **settings** — the default tip, the rounding preference, the API key. Seconds to retype.
+- **bills** — every receipt ever split. Not recoverable from anywhere.
 
-### Reporting is a library now
+The key travels with the settings, and that is deliberate. The blob is sealed with AES-GCM before
+it leaves the phone, and a restore that brings back everything except the one credential the app
+needs is the kind of backup you discover at the worst possible moment.
 
-The eight files under `com.gios.lighttip.report` are gone. They are `com.gios:light-common:1.0.1`,
-resolved from GitHub Packages, and shared with the other apps that had their own copy of the same
-code. LightTip is the first app to use it.
+Restore is two taps in LightSync, and the app is killed afterwards — Room caches in memory, so an
+app still running over swapped files will write the old rows back.
 
-Nothing about this is visible on the phone. It matters because a fix to the reporter used to mean
-editing it in ten places and getting eight of them subtly wrong, which is how the sheet-instead-of
--chip mistake reached ten apps before anyone saw it once.
+### R8 full mode
 
-One thing did have to change shape. `BuildConfig` does not cross a library boundary, so the app
-hands its name, its triage label and its report key to `LightReport.install()` at startup rather
-than the reporter reading them out of the build. Skip that call and reporting is simply inert,
-which is a better failure than a reporter that files issues with a blank app name.
+`android.enableR8.fullMode=true`. Compat mode was already shrinking; full mode also merges
+classes, drops unused arguments, and stops assuming a class it cannot see allocated might still
+be instantiated. On a phone this slow to start, that is most of the win.
 
-Same note field, same queue-to-disk-first behaviour, same gesture tuning. R8 stays on: the keep
-rules the reporter needs now arrive with the library instead of being written out here.
+Room and zxing already had the keep rules that full mode makes mandatory rather than merely wise,
+and `light-common` now ships its own — including keeping the line numbers, without which a crash
+report sent by shaking the phone arrives as a wall of one-letter names.
+
+The baseline profile in `light-common` is now actually installed, via `profileinstaller`. It was
+being packaged and ignored: below API 31 nothing reads a profile on its own. It covers the wheel
+and the crash handler, which is to say the first notch after a cold start and the code that runs
+in `onCreate` of every launch.
+
+### Known
+
+Full mode is a first for this app. If a saved bill fails to open or the QR scanner comes up blank,
+that is a missing keep rule rather than a data problem — shake the phone and it will be in
+light-reports with the class name in it.
