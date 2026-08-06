@@ -26,5 +26,5 @@ dependencyResolutionManagement {
         }
     }
 }
-rootProject.name = "LightTip"
+rootProject.name = "BrightTip"
 include(":app")
