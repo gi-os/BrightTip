@@ -3,6 +3,17 @@
 Tip calculator and AI receipt splitter for the **Light Phone III**. Shows up on the phone
 as **Tip Calculator**, package `com.gios.lighttip`. Current released version: **v1.0.13**.
 
+## Install via BrightMarket
+
+<p align="center">
+  <img src="https://gi-os.github.io/brightmarket-index/assets/brightmarket-qr.png" alt="Scan to open BrightMarket" width="180" />
+</p>
+
+Scan the code above, or visit
+**[gi-os.github.io/brightmarket-index/browse.html](https://gi-os.github.io/brightmarket-index/browse.html)**, to install
+and keep this app updated through **BrightMarket** — no Play Store, no PC
+required.
+
 ## Why this exists
 
 LightOS has no calculator built for splitting a bill, and every figure here is money —
