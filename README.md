@@ -1,7 +1,9 @@
 # BrightTip
 
-Tip calculator and AI receipt splitter for the **Light Phone III**. Shows up on the phone
-as **Tip Calculator**, package `com.gios.lighttip`. Current released version: **v1.0.13**.
+Calculator, currency converter, tip calculator and AI receipt splitter for the **Light
+Phone III** — four modes behind one picker at the top of the screen, the way the iPhone
+calculator switches between basic and scientific. Shows up on the phone as **Tip
+Calculator**, package `com.gios.lighttip`.
 
 ## Install via BrightMarket
 
@@ -35,12 +37,12 @@ trigger**, not a cosmetic action.
    ```
    or track `https://github.com/gi-os/BrightTip` in **Obtainium** (the repo URL, not the
    GitHub Pages URL below).
-2. Only the **Split** tab needs a key. Open
+2. Only **Receipt** mode needs a key. Open
    [gi-os.github.io/BrightTip](https://gi-os.github.io/BrightTip/), paste an Anthropic API
    key, and a QR appears — the page is entirely client-side, the key never leaves the
    browser. On the phone: **gear → Scan QR** (or type the key by hand).
-3. **Tip** tab works offline immediately: punch the bill into the keypad, pick a preset
-   (10/15/18/20/22%) or type your own, read tip and total.
+3. **Calculator** and **Tip** work offline immediately, and **Currency** works offline
+   too once it has downloaded a rate table. Tap the mode name in the title bar to switch.
 
 <table>
   <tr>
@@ -63,9 +65,48 @@ Taken on a Light Phone III.
 
 ## Configuration and usage
 
+### The four modes
+
+Tap the mode name in the title bar and a list drops down: **Calculator**, **Currency**,
+**Tip**, **Receipt**. The choice is remembered across launches, so a phone that only ever
+gets used as a calculator opens as one.
+
+There is no bottom tab bar any more. Four modes do not fit one, and the ~64dp it occupied
+is worth more as keypad on a panel this short.
+
+### Calculator
+
+Four functions, `%`, `±`, backspace, and chaining that folds as it goes — `2 + 3 +` shows
+5 before you type the 4. `=` on its own repeats the last operation, so `2 + 3 = =` walks
+5, 8, 11. The pending operator inverts so you can see which one is armed.
+
+Every value is a `BigDecimal`, never a `Double`: `0.1 + 0.2` is `0.3` here. That is the
+same rule as the rest of the app for the same reason — this thing is trusted with money,
+and a binary float cannot hold most cent amounts. Division by zero says so and locks
+every key but `C`, rather than propagating a poisoned figure into a total.
+
+**USE AS BILL → TIP** hands whatever is on the readout to the Tip screen as the bill,
+rounded half-up to the cent, so working out a share and then tipping on it is two taps.
+
+### Currency
+
+Rates come from [open.er-api.com](https://open.er-api.com) — no key, no account, about
+160 currencies, refreshed daily at the source. The whole table is fetched at once and
+cached, so every pair works offline afterwards; the app refetches at most once a day, on
+entry to the mode.
+
+The rate line and its age sit under the figure permanently rather than behind a tap, and
+the age brightens instead of dimming once the table is more than three days old. A
+converter that shows a number without saying how old it is invites you to trust a figure
+from three weeks ago.
+
+Exponents are per ISO 4217, not assumed to be two. Yen has no minor unit, dinars have
+three — the keypad, the formatter and the conversion all read the same table, so ¥1,200
+is twelve hundred yen and not twelve.
+
 ### Splitting a bill
 
-1. **SPLIT** tab → **+** → photograph the bill.
+1. **Receipt** mode → **+** → photograph the bill.
 2. Wait a second or two while Claude Haiku reads the line items off the photo. Vision runs
    on your own Anthropic key, stored on the phone; nothing else leaves the device, and
    quantities are expanded (2x Beer becomes two rows) so two people can each claim one.
@@ -113,8 +154,9 @@ adb shell appops set com.gios.lightcontrol SYSTEM_ALERT_WINDOW allow
 
 ### Notes for the LPIII panel
 
-- The screen is **greyscale on matte glass**. Selected tip chips invert rather than tint,
-  because hue is discarded and a low-alpha fill disappears.
+- The screen is **greyscale on matte glass**. Selected tip chips, the armed operator key
+  and the current row in the mode list all invert rather than tint, because hue is
+  discarded and a low-alpha fill disappears.
 - Surfaces are true black with no tonal elevation, so 1dp rules separate regions and
   dialogs get an explicit dark-grey fill — a scrim over black tints nothing.
 - The display is roughly **411 × 472 dp**, normal width and about half the usual height;
@@ -179,6 +221,10 @@ Issues and PRs welcome.
 
 - Money math changes need to keep the largest-remainder invariant — run the randomised
   trial suite, don't just eyeball a couple of examples.
+- The calculator and the converter are pure functions over immutable state with no Android
+  imports, and they are covered by `app/src/test/kotlin` — `./gradlew :app:testDebugUnitTest`
+  drives the whole keypad from a plain JVM test. Keep it that way; a keypad you can only
+  test by tapping it is a keypad nobody tests.
 - `material-icons-extended` is banned here — it alone was ~30 MB of the debug APK.
   Material3's core icon set plus a stock `Checkbox` covers everything used; `abiFilters`
   is arm64 only and the debug APK sits around 28 MB.

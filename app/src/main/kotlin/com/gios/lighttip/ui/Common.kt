@@ -2,14 +2,12 @@ package com.gios.lighttip.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -24,7 +22,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.gios.lighttip.ui.theme.Dim
-import com.gios.lighttip.ui.theme.Faint
 import com.gios.lighttip.ui.theme.RuleGrey
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -88,40 +85,6 @@ fun MenuRow(
         }
         if (detail != null) {
             Text(detail, style = MaterialTheme.typography.bodyLarge, color = Color.White)
-        }
-    }
-}
-
-/**
- * Bottom tab bar in the LightOS action-bar idiom. The active tab is bracketed as
- * well as brightened, because the panel is greyscale and matte — a colour or a
- * faint tint would not read.
- */
-@Composable
-fun TabBar(selected: Int, labels: List<String>, onSelect: (Int) -> Unit) {
-    Column {
-        Rule()
-        Row(
-            Modifier.fillMaxWidth().height(64.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            labels.forEachIndexed { i, label ->
-                val active = i == selected
-                Box(
-                    Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                        .clickable { onSelect(i) },
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        if (active) "[ $label ]" else label,
-                        style = MaterialTheme.typography.labelLarge,
-                        color = if (active) Color.White else Faint,
-                    )
-                }
-            }
         }
     }
 }

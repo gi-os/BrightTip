@@ -76,9 +76,10 @@ fun SettingsScreen(vm: TipViewModel, onScanQr: () -> Unit, onBack: () -> Unit) {
                 OutlinedButton(onClick = onScanQr) { Text("Scan QR") }
             }
             Text(
-                "Only the Split tab needs a key — it reads receipts with Claude Haiku, " +
-                    "roughly a fraction of a cent per bill. The key is stored on this phone only. " +
-                    "The Tip tab works offline.",
+                "Only Receipt mode needs a key — it reads bills with Claude Haiku, roughly a " +
+                    "fraction of a cent each. The key is stored on this phone only. Calculator " +
+                    "and Tip never touch the network, and Currency works offline on the last " +
+                    "rates it downloaded.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = Dim,
             )
