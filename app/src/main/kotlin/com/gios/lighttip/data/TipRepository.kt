@@ -19,6 +19,16 @@ class TipRepository(private val context: Context) {
     fun observeAssignments(receiptId: String): Flow<List<AssignmentEntity>> =
         dao.observeAssignments(receiptId)
 
+    /**
+     * The mode the app was last left in, by ordinal. Someone who only ever uses this as a
+     * calculator should not have to re-pick it every launch.
+     */
+    fun lastMode(): Int = prefs.getInt("last_mode", 0)
+
+    fun setLastMode(ordinal: Int) {
+        prefs.edit().putInt("last_mode", ordinal).apply()
+    }
+
     fun getApiKey(): String = prefs.getString("api_key", "").orEmpty()
     fun setApiKey(key: String) {
         prefs.edit().putString("api_key", key.trim()).apply()

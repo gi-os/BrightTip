@@ -26,7 +26,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -51,41 +50,68 @@ fun HomeScreen(
     onOpenReceipt: (String) -> Unit,
     onSettings: () -> Unit,
 ) {
-    var tab by rememberSaveable { mutableIntStateOf(0) }
+    val mode by vm.mode.collectAsStateWithLifecycle()
     val busy by vm.busy.collectAsStateWithLifecycle()
+    var pickerOpen by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
         containerColor = Color.Black,
         topBar = {
             TopAppBar(
                 colors = barColors(),
-                title = { Text(if (tab == 0) "Tip Calculator" else "Split a bill") },
+                title = {
+                    ModeTitle(mode, open = pickerOpen, onToggle = { pickerOpen = !pickerOpen })
+                },
                 navigationIcon = {
                     IconButton(onClick = onSettings) { Icon(Icons.Default.Settings, "Settings") }
                 },
                 actions = {
-                    if (tab == 1) {
+                    if (mode == CalcMode.Receipt) {
                         IconButton(onClick = onCapture) { Icon(Icons.Default.Add, "Add receipt") }
                     }
                 },
             )
         },
-        bottomBar = {
-            TabBar(selected = tab, labels = listOf("TIP", "SPLIT"), onSelect = { tab = it })
-        },
     ) { pad ->
-        Column(Modifier.padding(pad).fillMaxSize().background(Color.Black)) {
-            if (busy) {
-                LinearProgressIndicator(
-                    Modifier.fillMaxWidth(),
-                    color = Color.White,
-                    trackColor = Color(0xFF303030),
-                )
+        // The picker is stacked over the mode's own content rather than pushing it: on a
+        // screen this short, a list that displaced a keypad would relayout the whole
+        // screen every time you glanced at it.
+        Box(Modifier.padding(pad).fillMaxSize().background(Color.Black)) {
+            Column(Modifier.fillMaxSize()) {
+                if (busy) {
+                    LinearProgressIndicator(
+                        Modifier.fillMaxWidth(),
+                        color = Color.White,
+                        trackColor = Color(0xFF303030),
+                    )
+                }
+                when (mode) {
+                    CalcMode.Calculator -> CalculatorTab(
+                        state = vm.calc.collectAsStateWithLifecycle().value,
+                        onKey = vm::onCalcKey,
+                        onSendToTip = vm::calcToTip,
+                    )
+
+                    CalcMode.Currency -> CurrencyTab(
+                        state = vm.currency.collectAsStateWithLifecycle().value,
+                        onDigit = vm::currencyDigit,
+                        onBackspace = vm::currencyBackspace,
+                        onClear = vm::currencyClear,
+                        onSwap = vm::currencySwap,
+                        onRefresh = { vm.refreshRates() },
+                        onPick = vm::currencyPick,
+                    )
+
+                    CalcMode.Tip -> TipTab(vm)
+                    CalcMode.Receipt -> SplitTab(vm, onCapture = onCapture, onOpen = onOpenReceipt)
+                }
             }
-            when (tab) {
-                0 -> TipTab(vm)
-                else -> SplitTab(vm, onCapture = onCapture, onOpen = onOpenReceipt)
-            }
+            ModeSheet(
+                current = mode,
+                open = pickerOpen,
+                onSelect = { vm.setMode(it); pickerOpen = false },
+                onDismiss = { pickerOpen = false },
+            )
         }
     }
 }
@@ -193,7 +219,7 @@ fun PresetGrid(
     }
 }
 
-/* ---------------------------------------------------------------- Split tab */
+/* ------------------------------------------------------------ Receipt mode */
 
 @Composable
 private fun ColumnScope.SplitTab(

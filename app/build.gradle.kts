@@ -33,7 +33,7 @@ android {
         targetSdk = 35
         // CI overwrites both from the workflow run number; see .github/workflows/build.yml
         versionCode = 1
-        versionName = "1.3.0"
+        versionName = "1.4.0"
 
         buildConfigField("String", "REPORT_TOKEN", "\"$reportToken\"")
         buildConfigField("String", "REPORT_REPO", "\"gi-os/light-reports\"")
@@ -106,7 +106,7 @@ dependencies {
     // Images
     implementation("androidx.exifinterface:exifinterface:1.3.7")
 
-    // Networking (Claude Vision)
+    // Networking (Claude Vision, and the currency rate table)
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
     // QR scanning (API key entry)
