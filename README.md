@@ -1,3 +1,5 @@
+<img src="docs/icon.png" alt="" width="72" align="left" />
+
 # BrightTip
 
 Calculator, currency converter, tip calculator and AI receipt splitter for the **Light
