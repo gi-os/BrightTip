@@ -238,6 +238,7 @@ Issues and PRs welcome.
 
 | Version | Change |
 | --- | --- |
+| v1.5 | Keypad digits are sized from the key, not from a constant [light-reports#127] |
 | v1.0.13 | Say plainly that the wheel works with BrightTip alone (docs) |
 | v1.0.12 | Scroll with the wheel |
 | v1.0.11 | docs: add BrightNoise and LightPods to the collection table |
