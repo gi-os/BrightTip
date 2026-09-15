@@ -2,6 +2,8 @@
 
 # BrightTip
 
+[**⬇ Download the latest APK**](https://github.com/gi-os/BrightTip/releases/latest) · free, open source.
+
 Calculator, currency converter, tip calculator and AI receipt splitter for the **Light
 Phone III** — four modes behind one picker at the top of the screen, the way the iPhone
 calculator switches between basic and scientific. Shows up on the phone as **Tip
