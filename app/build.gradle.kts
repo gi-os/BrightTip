@@ -22,11 +22,6 @@ val reportToken: String = run {
     fromFile ?: System.getenv("REPORT_TOKEN") ?: ""
 }
 
-val keystoreFile = providers.environmentVariable("KEYSTORE_FILE").orNull
-val keystorePassword = providers.environmentVariable("KEYSTORE_PASSWORD").orNull
-val releaseKeyAlias = providers.environmentVariable("KEY_ALIAS").orNull
-val releaseKeyPassword = providers.environmentVariable("KEY_PASSWORD").orNull
-
 android {
     namespace = "com.gios.lighttip"
     compileSdk = 35
@@ -47,19 +42,6 @@ android {
         ndk { abiFilters += "arm64-v8a" }
     }
 
-    val releaseSigning = if (!keystoreFile.isNullOrBlank() && !keystorePassword.isNullOrBlank()
-        && !releaseKeyAlias.isNullOrBlank() && !releaseKeyPassword.isNullOrBlank()
-    ) {
-        signingConfigs.create("release") {
-            storeFile = rootProject.file(keystoreFile)
-            storePassword = keystorePassword
-            keyAlias = releaseKeyAlias
-            keyPassword = releaseKeyPassword
-        }
-    } else {
-        null
-    }
-
     buildTypes {
         release {
             // R8 on. The app pulls Room, CameraX, zxing and OkHttp for a tip calculator, and
@@ -68,7 +50,6 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            signingConfig = releaseSigning
         }
     }
     compileOptions {

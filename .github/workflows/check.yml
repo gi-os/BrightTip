@@ -84,12 +84,18 @@ jobs:
             --ks-pass env:KEYSTORE_PASSWORD --key-pass env:KEY_PASSWORD
           bash scripts/sign-release.sh "$unsigned" "$test_dir/rotated.apk" "$test_dir/original.txt" "$test_dir/rotated.txt"
 
-          printf '%064d\n' 0 > "$test_dir/wrong-root.txt"
-          if bash scripts/sign-release.sh "$unsigned" "$test_dir/wrong-root.apk" "$test_dir/wrong-root.txt" "$test_dir/rotated.txt" > "$test_dir/rejection.log"; then
+          printf '%064d\n' 0 > "$test_dir/wrong-pin.txt"
+          if bash scripts/sign-release.sh "$unsigned" "$test_dir/wrong-root.apk" "$test_dir/wrong-pin.txt" "$test_dir/rotated.txt" > "$test_dir/rejection.log"; then
             echo '::error::Release signing accepted an unexpected lineage root'
             exit 1
           fi
           grep -Fx '::error::APK lineage must link the pinned original and rotated certificates' "$test_dir/rejection.log"
+
+          if bash scripts/sign-release.sh "$unsigned" "$test_dir/wrong-signer.apk" "$test_dir/original.txt" "$test_dir/wrong-pin.txt" > "$test_dir/rejection.log"; then
+            echo '::error::Release signing accepted an unexpected rotated signer'
+            exit 1
+          fi
+          grep -Fx '::error::APK must verify with the pinned rotated signer using signature scheme v3' "$test_dir/rejection.log"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4

@@ -184,24 +184,28 @@ light-sdk fork and had to be rebuilt from scratch as one.
 ./gradlew :app:assembleRelease
 ```
 
-Without signing credentials, the release APK is unsigned and debug builds use the standard
-Android debug key. Neither can update an installed production APK.
+`./gradlew :app:assembleRelease` builds an unsigned APK. Debug builds use the standard
+Android debug key, which varies across CI runners; a debug APK cannot update a production
+install. The **Check** workflow tests signing with disposable keys and never publishes.
 
 CI (`.github/workflows/build.yml`) publishes a signed GitHub Release on every push to
-`main` (other than ignored paths) and on a manual run: `versionCode` = workflow run number,
-`versionName` = `1.0.<run>`, tag `v1.0.<run>`, exactly one APK named
-`LightTip-v<version>.apk`, marked latest — the debug build stays a workflow artifact. Branch
-and PR checks in `check.yml` publish nothing.
+`main` (other than ignored paths) and on a manual run from `main`: `versionCode` = workflow
+run number, `versionName` = `1.0.<run>`, tag `v1.0.<run>`, exactly one APK named
+`LightTip-v<version>.apk`, marked latest — the debug build stays a workflow artifact.
 
 ### Release signing
 
-Before merging the signing change, disable **Build & Release APK** so the merge does not
-publish. In a private directory outside the checkout, use Android Build Tools 35.0.0 to
-generate the replacement key and create a proof of rotation from the original release key
-(`keystore/lighttip.jks` in git history before this change, alias `lighttip`). Use fresh
-passwords when prompted.
+Before merging the signing change, disable
+[Build & Release APK](https://github.com/gi-os/BrightTip/actions/workflows/build.yml).
+A push to `main` otherwise publishes. Keep it disabled until the rotation and distribution
+checks below are done and you intend to publish.
+
+In a private directory outside the checkout, use Android Build Tools 35.0.0. Use the
+original `keystore/lighttip.jks` from git history (alias `lighttip`, keystore and key
+password `lighttip`) only for the offline rotation step. Use fresh passwords for the new key.
 
 ```sh
+umask 077
 git -C /path/to/BrightTip show ee5077c:keystore/lighttip.jks > lighttip-original.jks
 
 keytool -genkeypair -storetype JKS -keystore lighttip-new.jks -alias lighttip-release \
@@ -215,12 +219,15 @@ apksigner rotate --out lighttip.lineage \
 apksigner lineage --in lighttip.lineage --print-certs
 ```
 
-The original keystore and key password are both `lighttip`. Verify that signer #1's SHA-256
-digest matches `signing-lineage-root-fingerprint.txt`, then replace `signing-fingerprint.txt`
-with signer #2's SHA-256 digest. Do not change the original fingerprint. Keep the original
-private key out of CI; it is only needed offline to create the lineage.
+Verify signer #1's SHA-256 digest against `signing-lineage-root-fingerprint.txt` and
+replace `signing-fingerprint.txt` with signer #2's SHA-256 digest. Do not change the
+original pin. The release won't publish while the pins are still identical.
 
-In **Settings → Secrets and variables → Actions**, set these five secrets:
+In [BrightTip's environment settings](https://github.com/gi-os/BrightTip/settings/environments),
+create an environment named `release`. Under **Deployment branches and tags**, choose
+**Selected branches and tags** and add a single **Branch** rule for `main`, with no tag
+rules. Add the five secrets below to that environment only. Do not use repository-wide
+secrets or upload the original key or its passwords.
 
 | Secret | Value |
 | --- | --- |
@@ -230,23 +237,28 @@ In **Settings → Secrets and variables → Actions**, set these five secrets:
 | `KEY_ALIAS` | `lighttip-release` |
 | `KEY_PASSWORD` | New key password |
 
-On Linux, upload the files without printing their contents and enter the other values when
-prompted:
+On Linux, stream the files and enter the passwords at the prompts:
 
 ```sh
-base64 -w 0 lighttip-new.jks | gh secret set RELEASE_KEYSTORE_BASE64 --repo gi-os/BrightTip
-base64 -w 0 lighttip.lineage | gh secret set SIGNING_LINEAGE_BASE64 --repo gi-os/BrightTip
-gh secret set KEYSTORE_PASSWORD --repo gi-os/BrightTip
-gh secret set KEY_ALIAS --repo gi-os/BrightTip
-gh secret set KEY_PASSWORD --repo gi-os/BrightTip
+base64 -w 0 lighttip-new.jks | gh secret set RELEASE_KEYSTORE_BASE64 --env release --repo gi-os/BrightTip
+base64 -w 0 lighttip.lineage | gh secret set SIGNING_LINEAGE_BASE64 --env release --repo gi-os/BrightTip
+gh secret set KEYSTORE_PASSWORD --env release --repo gi-os/BrightTip
+gh secret set KEY_ALIAS --env release --repo gi-os/BrightTip --body lighttip-release
+gh secret set KEY_PASSWORD --env release --repo gi-os/BrightTip
 ```
 
-CI signs with the new key using APK Signature Scheme v3 and verifies the proof of rotation
-from the original pin to the new pin. LightTip requires Android API 29, so no supported
-device needs a v1/v2 signature or the old private key. Android can accept an in-place
-update, but a catalog that compares only the current certificate can still hide it from
-users on the old signer. Coordinate the BrightMarket catalog/updater transition before
-re-enabling publishing, and only re-enable it for an authorized release.
+CI supplies only the new private key to `scripts/sign-release.sh` and checks that the APK's
+v3 lineage links both pins, preserves installed data, and disallows signer rollback. API 29+
+does not need v1/v2 signatures. Removing the old key from the branch does not remove it
+from Git history or protect installs that still trust it.
+
+Before re-enabling publishing, verify an in-place update from the last shipped build to a
+locally signed test APK with a greater `versionCode`. Coordinate the BrightMarket migration:
+add the old-to-new `com.gios.lighttip` handover to
+[the index](https://github.com/gi-os/brightmarket-index/blob/HEAD/scripts/build_index.py)
+and ensure [the updater](https://github.com/gi-os/BrightMarket) accepts the installed
+predecessor for this transition. The index otherwise keeps the old release, and changing
+the catalog pin alone makes the current updater classify old installs as foreign.
 
 Two CI gotchas worth not relitigating:
 
