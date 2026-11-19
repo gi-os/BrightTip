@@ -184,12 +184,69 @@ light-sdk fork and had to be rebuilt from scratch as one.
 ./gradlew :app:assembleRelease
 ```
 
+Without signing credentials, the release APK is unsigned and debug builds use the standard
+Android debug key. Neither can update an installed production APK.
+
 CI (`.github/workflows/build.yml`) publishes a signed GitHub Release on every push to
-`main`: `versionCode` = workflow run number, `versionName` = `1.0.<run>`, tag
-`v1.0.<run>`, exactly one APK named `LightTip-v<version>.apk`, marked latest — the debug
-build stays a workflow artifact. The keystore is committed at `keystore/lighttip.jks` so
-`adb install -r` upgrades in place, and CI pins its cert SHA-256 in
-`signing-fingerprint.txt`.
+`main` (other than ignored paths) and on a manual run: `versionCode` = workflow run number,
+`versionName` = `1.0.<run>`, tag `v1.0.<run>`, exactly one APK named
+`LightTip-v<version>.apk`, marked latest — the debug build stays a workflow artifact. Branch
+and PR checks in `check.yml` publish nothing.
+
+### Release signing
+
+Before merging the signing change, disable **Build & Release APK** so the merge does not
+publish. In a private directory outside the checkout, use Android Build Tools 35.0.0 to
+generate the replacement key and create a proof of rotation from the original release key
+(`keystore/lighttip.jks` in git history before this change, alias `lighttip`). Use fresh
+passwords when prompted.
+
+```sh
+git -C /path/to/BrightTip show ee5077c:keystore/lighttip.jks > lighttip-original.jks
+
+keytool -genkeypair -storetype JKS -keystore lighttip-new.jks -alias lighttip-release \
+  -keyalg RSA -keysize 3072 -validity 10000
+
+apksigner rotate --out lighttip.lineage \
+  --old-signer --ks lighttip-original.jks --ks-key-alias lighttip \
+  --set-installed-data true --set-rollback false \
+  --new-signer --ks lighttip-new.jks --ks-key-alias lighttip-release
+
+apksigner lineage --in lighttip.lineage --print-certs
+```
+
+The original keystore and key password are both `lighttip`. Verify that signer #1's SHA-256
+digest matches `signing-lineage-root-fingerprint.txt`, then replace `signing-fingerprint.txt`
+with signer #2's SHA-256 digest. Do not change the original fingerprint. Keep the original
+private key out of CI; it is only needed offline to create the lineage.
+
+In **Settings → Secrets and variables → Actions**, set these five secrets:
+
+| Secret | Value |
+| --- | --- |
+| `RELEASE_KEYSTORE_BASE64` | Base64-encoded `lighttip-new.jks` |
+| `SIGNING_LINEAGE_BASE64` | Base64-encoded `lighttip.lineage` |
+| `KEYSTORE_PASSWORD` | New keystore password |
+| `KEY_ALIAS` | `lighttip-release` |
+| `KEY_PASSWORD` | New key password |
+
+On Linux, upload the files without printing their contents and enter the other values when
+prompted:
+
+```sh
+base64 -w 0 lighttip-new.jks | gh secret set RELEASE_KEYSTORE_BASE64 --repo gi-os/BrightTip
+base64 -w 0 lighttip.lineage | gh secret set SIGNING_LINEAGE_BASE64 --repo gi-os/BrightTip
+gh secret set KEYSTORE_PASSWORD --repo gi-os/BrightTip
+gh secret set KEY_ALIAS --repo gi-os/BrightTip
+gh secret set KEY_PASSWORD --repo gi-os/BrightTip
+```
+
+CI signs with the new key using APK Signature Scheme v3 and verifies the proof of rotation
+from the original pin to the new pin. LightTip requires Android API 29, so no supported
+device needs a v1/v2 signature or the old private key. Android can accept an in-place
+update, but a catalog that compares only the current certificate can still hide it from
+users on the old signer. Coordinate the BrightMarket catalog/updater transition before
+re-enabling publishing, and only re-enable it for an authorized release.
 
 Two CI gotchas worth not relitigating:
 
