@@ -24,15 +24,6 @@ android {
         ndk { abiFilters += "arm64-v8a" }
     }
 
-    signingConfigs {
-        getByName("debug") {
-            storeFile = file("../keystore/lighttip.jks")
-            storePassword = "lighttip"
-            keyAlias = "lighttip"
-            keyPassword = "lighttip"
-        }
-    }
-
     buildTypes {
         release {
             // R8 on. The app pulls Room, CameraX, zxing and OkHttp for a tip calculator, and
@@ -41,8 +32,6 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            // Same committed key as debug, so either APK upgrades over the other.
-            signingConfig = signingConfigs.getByName("debug")
         }
     }
     compileOptions {
