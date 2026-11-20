@@ -45,9 +45,6 @@ jobs:
       - name: Build APKs
         run: ./gradlew :app:assembleDebug :app:assembleRelease --stacktrace
         env:
-          # Shake-to-report posts issues with this. Absent, the build still works —
-          # reports queue on the phone until a build that has the key installs over it.
-          REPORT_TOKEN: ${{ secrets.REPORT_TOKEN }}
           # Resolving light-common from GitHub Packages. See check.yml for why GITHUB_TOKEN
           # has to be passed explicitly and why GPR_TOKEN can override it.
           GPR_USER: ${{ secrets.GPR_USER }}
